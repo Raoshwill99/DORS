@@ -1,232 +1,214 @@
 # Decentralized Oracle Redundancy System (DORS)
 
+A robust and secure decentralized oracle system built on the Stacks blockchain using Clarity smart contracts. DORS provides reliable price feed data through a sophisticated stake-weighted consensus mechanism with multiple data source integration.
+
 ## Overview
-DORS is a robust and secure decentralized oracle system built on the Stacks blockchain using Clarity smart contracts. The system provides reliable price feed data through a network of incentivized oracle nodes, implementing multiple layers of redundancy and consensus mechanisms to ensure data accuracy.
 
-## Features
+DORS solves the oracle problem in blockchain networks by implementing a redundant, stake-weighted system where multiple oracle nodes provide and verify data. The system ensures high reliability through economic incentives, round-based consensus mechanisms, and performance tracking.
 
-### Core Functionality
-- **Decentralized Oracle Network**: A network of independent oracle nodes providing price feed data
-- **Stake-Based Participation**: Oracle nodes must stake STX tokens to participate
-- **Consensus-Driven Data Validation**: Implementation of consensus mechanisms for data verification
-- **Performance Tracking**: Built-in system for tracking oracle node accuracy and reliability
+### Key Features
 
-### Security Features
-- Minimum stake requirements for oracle participation
-- Active status verification for all submissions
-- Administrative controls for system management
-- Comprehensive error handling
+- **Advanced Stake-Based Participation**: 
+  - Minimum stake requirement: 1,000,000 microSTX
+  - Stake-weighted voting power
+  - Dynamic performance scoring
+
+- **Round-Based Consensus**:
+  - Time-windowed submission periods
+  - Stake-weighted price aggregation
+  - Outlier detection and filtering
+
+- **Performance Tracking**:
+  - Accuracy scoring system
+  - Historical performance metrics
+  - Weighted reputation scores
+
+- **Economic Incentives**:
+  - Rewards for accurate submissions
+  - Penalties for deviation
+  - Stake-based influence
 
 ## Technical Architecture
 
-### Smart Contract Components
+### Smart Contracts
 
-#### Data Structures
-- `oracle-nodes`: Maintains registry of oracle nodes and their attributes
-  ```clarity
-  {
-      stake: uint,
-      active: bool,
-      accuracy-score: uint,
-      total-submissions: uint
-  }
-  ```
-- `price-submissions`: Tracks all price submissions and their verification status
-  ```clarity
-  {
-      oracle: principal,
-      price: uint,
-      timestamp: uint,
-      verified: bool
-  }
-  ```
+The system consists of three main data structures:
 
-#### Core Functions
+```clarity
+;; Oracle Node Data
+(define-map oracle-nodes 
+    principal 
+    {
+        stake: uint,
+        active: bool,
+        accuracy-score: uint,
+        total-submissions: uint,
+        total-correct: uint,
+        weighted-score: uint,
+        last-submission-height: uint
+    }
+)
 
-1. Oracle Registration
-   ```clarity
-   (define-public (register-oracle))
-   ```
-   - Registers new oracle nodes
-   - Verifies minimum stake requirements
-   - Initializes oracle performance metrics
+;; Price Round Data
+(define-map price-rounds
+    uint
+    {
+        final-price: (optional uint),
+        submissions-count: uint,
+        consensus-reached: bool,
+        round-closed: bool,
+        total-stake-weight: uint
+    }
+)
 
-2. Price Submission
-   ```clarity
-   (define-public (submit-price (price uint)))
-   ```
-   - Allows active oracles to submit price data
-   - Records submission timestamp and oracle identity
-   - Updates submission counter
+;; Round Submissions
+(define-map round-submissions
+    {round-id: uint, oracle: principal}
+    {
+        price: uint,
+        stake-weight: uint,
+        verified: bool,
+        rewarded: bool
+    }
+)
+```
 
-3. Query Functions
-   ```clarity
-   (define-read-only (get-oracle-status (oracle-address principal)))
-   (define-read-only (get-submission (submission-id uint)))
-   ```
-   - Retrieve oracle node status and details
-   - Access historical price submissions
+### Key Functions
 
-## Setup and Deployment
+1. **Oracle Registration and Management**
+   - `register-oracle`: Register as an oracle node with required stake
+   - `calculate-stake-weight`: Compute node's influence based on stake and performance
+
+2. **Price Submission System**
+   - `submit-price-with-weight`: Submit price data with stake-weighted influence
+   - `finalize-round`: Process submissions and determine consensus price
+
+3. **Consensus Mechanism**
+   - Round-based submission windows
+   - Stake-weighted median calculation
+   - Automatic round progression
+
+4. **Performance Tracking**
+   - Accuracy score calculation
+   - Historical performance metrics
+   - Dynamic stake weight adjustments
+
+## Setup Instructions
 
 ### Prerequisites
-- Stacks blockchain development environment
-- Clarity CLI tools (version 2.0 or higher)
-- Minimum STX tokens for contract deployment and oracle staking
-- Node.js v14+ for testing environment
 
-### Deployment Steps
-1. Clone the repository
-   ```bash
-   git clone https://github.com/your-org/dors.git
-   cd dors
-   ```
+- Stacks blockchain environment (testnet or mainnet)
+- Clarity CLI tools
+- Minimum stake amount in STX
+- Node.js and npm (for testing environment)
 
-2. Install dependencies
-   ```bash
-   npm install
-   ```
+### Installation
 
-3. Configure deployment parameters
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+1. Clone the repository:
+```bash
+git clone https://github.com/your-username/dors.git
+cd dors
+```
 
-4. Deploy the smart contract
-   ```bash
-   clarinet deploy --network mainnet
-   ```
+2. Install dependencies:
+```bash
+npm install
+```
 
-5. Register initial oracle nodes
-   ```bash
-   clarinet contract-call --contract-name oracle-system --function-name register-oracle
-   ```
+3. Deploy the contract:
+```bash
+clarinet contract deploy oracle-system
+```
 
-### Configuration
-Key system parameters that can be adjusted:
-- `min-stake`: Minimum required stake for oracle participation (default: 1,000,000 STX)
-- `consensus-threshold`: Required consensus percentage for price validation (default: 80%)
+### Usage
+
+To register as an oracle:
+```clarity
+(contract-call? .oracle-system register-oracle)
+```
+
+To submit price data:
+```clarity
+(contract-call? .oracle-system submit-price-with-weight u1000000)
+```
+
+To check round status:
+```clarity
+(contract-call? .oracle-system get-round-status u1)
+```
 
 ## Testing
 
-### Unit Tests
-```clarity
-;; Test oracle registration
-(test-register-oracle)
-  (let
-    ((test-oracle tx-sender))
-    (try! (register-oracle))
-    (asserts! (is-eq (get active (unwrap-panic (get-oracle-status test-oracle))) true) (err u1))
-  )
-
-;; Test price submission
-(test-price-submission)
-  (let
-    ((test-price u1000))
-    (try! (submit-price test-price))
-    (asserts! (is-eq (get price (unwrap-panic (get-submission u0))) test-price) (err u1))
-  )
+Run the test suite:
+```bash
+clarinet test
 ```
 
-### Integration Tests
-1. **Oracle Network Tests**
-   - Multiple oracle registration
-   - Concurrent price submissions
-   - Consensus mechanism verification
+## Security Considerations
 
-2. **Security Tests**
-   - Stake requirement validation
-   - Administrative function access control
-   - Error handling for invalid operations
+- Minimum stake requirement prevents spam
+- Time-windowed submissions prevent manipulation
+- Stake-weighted consensus reduces attack vectors
+- Performance tracking identifies malicious actors
+- Economic penalties for bad behavior
 
-3. **Performance Tests**
-   - High-volume submission handling
-   - Network congestion scenarios
-   - State transition verification
+## Development Phases
 
-### Test Coverage
-- Contract Functions: 100%
-- Error Scenarios: 100%
-- Security Features: 100%
-- Edge Cases: 95%
+### Phase 1 (Completed)
+- Basic oracle registration
+- Simple price submission
+- Administrative controls
 
-## Error Codes and Handling
+### Phase 2 (Current)
+- Enhanced consensus mechanism
+- Stake-weighted reporting
+- Round-based submissions
+- Performance tracking
+- Economic incentives
 
-### System Error Codes
-- `u1`: Insufficient stake
-- `u2`: Oracle already registered
-- `u3`: Oracle not found
-- `u4`: Oracle inactive
-- `u5`: Unauthorized access
-- `u6`: Invalid operation
-
-### Error Handling Best Practices
-1. Always check return values
-2. Implement proper error recovery
-3. Log all error occurrences
-4. Maintain error state history
-
-## Future Enhancements
-1. Enhanced Consensus Mechanisms
-   - Implement Delegated Proof of Stake (DPoS)
-   - Add weighted voting based on accuracy history
-   - Introduce slashing for malicious behavior
-
-2. Multiple Data Source Integration
-   - API integration framework
-   - Cross-chain data verification
-   - Automated source reliability scoring
-
-3. Advanced Stake-weighted Reporting
-   - Dynamic stake requirements
-   - Reputation-based stake multipliers
-   - Graduated stake release mechanism
-
-4. Expanded Verification Methods
-   - Zero-knowledge proof implementation
-   - Multi-signature verification
-   - Threshold signature schemes
-
-5. Reputation System Improvements
-   - Historical performance analytics
-   - Dynamic reputation scoring
-   - Automated penalty system
+### Future Phases
+1. Multiple data source integration
+2. Advanced verification methods
+3. Cross-chain compatibility
+4. Governance mechanisms
+5. Advanced economic models
 
 ## Contributing
 
-### Development Workflow
 1. Fork the repository
-2. Create a feature branch
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-3. Commit your changes
-   ```bash
-   git commit -m "Add: your feature description"
-   ```
-4. Push to your fork
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-5. Submit a pull request
+2. Create your feature branch: `git checkout -b feature/AmazingFeature`
+3. Commit your changes: `git commit -m 'Add some AmazingFeature'`
+4. Push to the branch: `git push origin feature/AmazingFeature`
+5. Open a Pull Request
 
-### Code Standards
+### Contribution Guidelines
+
 - Follow Clarity best practices
-- Maintain test coverage above 90%
-- Document all new functions
-- Update README for significant changes
-
-### Review Process
-1. Automated testing
-2. Code review by maintainers
-3. Security review for critical changes
-4. Community feedback period
+- Include comprehensive tests
+- Update documentation
+- Follow the existing code style
+- Add inline comments for complex logic
 
 ## License
-MIT License
+
+This project is licensed under the MIT License.
 
 ## Acknowledgments
-- Stacks Foundation for blockchain infrastructure
-- Oracle research community
-- All contributors and community members
+
+- Stacks Foundation
+- Clarity Lang Documentation
+- Bitcoin Network
+- Blockchain Oracle Community
+
+## Changelog
+
+### v0.2.0 (Current)
+- Added round-based consensus mechanism
+- Implemented stake-weighted reporting
+- Enhanced performance tracking
+- Added economic incentives
+
+### v0.1.0
+- Initial release
+- Basic oracle functionality
+- Simple price submissions
