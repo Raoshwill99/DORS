@@ -1,97 +1,82 @@
-# Decentralized Oracle Redundancy System (DORS)
+# Compact Decentralized Oracle System (CDOS)
 
-A robust and secure decentralized oracle system built on the Stacks blockchain using Clarity smart contracts. DORS provides reliable price feed data through a sophisticated stake-weighted consensus mechanism with multiple data source integration.
+A streamlined and efficient decentralized oracle system built on the Stacks blockchain using Clarity smart contracts. CDOS provides reliable price feed data through a simplified stake-weighted consensus mechanism focused on core oracle functionality.
 
 ## Overview
 
-DORS solves the oracle problem in blockchain networks by implementing a redundant, stake-weighted system where multiple oracle nodes provide and verify data. The system ensures high reliability through economic incentives, round-based consensus mechanisms, and performance tracking.
+CDOS addresses the oracle problem with a lean, efficient approach that maintains security and reliability while reducing complexity. The system uses economic incentives through staking requirements and accuracy-based consensus to ensure trustworthy price data.
 
 ### Key Features
 
-- **Advanced Stake-Based Participation**: 
+- **Simplified Oracle Registration**: 
   - Minimum stake requirement: 1,000,000 microSTX
-  - Stake-weighted voting power
-  - Dynamic performance scoring
+  - Streamlined registration process
+  - Basic accuracy tracking
 
-- **Round-Based Consensus**:
-  - Time-windowed submission periods
-  - Stake-weighted price aggregation
-  - Outlier detection and filtering
+- **Essential Price Submission**: 
+  - Direct price submission system
+  - Round-based consensus mechanism
+  - Duplicate submission protection
 
-- **Performance Tracking**:
-  - Accuracy scoring system
-  - Historical performance metrics
-  - Weighted reputation scores
+- **Core Consensus Mechanism**:
+  - Minimum 3 oracle requirement for consensus
+  - Simple averaging algorithm (upgradeable to median)
+  - Automated round finalization
 
-- **Economic Incentives**:
-  - Rewards for accurate submissions
-  - Penalties for deviation
-  - Stake-based influence
+- **Lightweight Architecture**:
+  - ~80 lines of Clarity code
+  - Reduced gas costs
+  - Easy to audit and maintain
 
 ## Technical Architecture
 
-### Smart Contracts
+### Smart Contract Structure
 
-The system consists of three main data structures:
+The compact system uses three main data structures:
 
 ```clarity
-;; Oracle Node Data
-(define-map oracle-nodes 
+;; Oracle Registry
+(define-map oracles 
     principal 
     {
         stake: uint,
         active: bool,
-        accuracy-score: uint,
-        total-submissions: uint,
-        total-correct: uint,
-        weighted-score: uint,
-        last-submission-height: uint
+        accuracy: uint
     }
 )
 
 ;; Price Round Data
-(define-map price-rounds
+(define-map price-data
     uint
     {
-        final-price: (optional uint),
-        submissions-count: uint,
-        consensus-reached: bool,
-        round-closed: bool,
-        total-stake-weight: uint
+        price: (optional uint),
+        submissions: uint,
+        closed: bool
     }
 )
 
-;; Round Submissions
-(define-map round-submissions
-    {round-id: uint, oracle: principal}
-    {
-        price: uint,
-        stake-weight: uint,
-        verified: bool,
-        rewarded: bool
-    }
+;; Submission Tracking
+(define-map submissions
+    {round: uint, oracle: principal}
+    uint
 )
 ```
 
-### Key Functions
+### Core Functions
 
-1. **Oracle Registration and Management**
-   - `register-oracle`: Register as an oracle node with required stake
-   - `calculate-stake-weight`: Compute node's influence based on stake and performance
+1. **Oracle Registration**
+   - `register-oracle`: Register with minimum stake requirement
 
-2. **Price Submission System**
-   - `submit-price-with-weight`: Submit price data with stake-weighted influence
-   - `finalize-round`: Process submissions and determine consensus price
+2. **Price Submission**
+   - `submit-price`: Submit price data for current round
 
 3. **Consensus Mechanism**
-   - Round-based submission windows
-   - Stake-weighted median calculation
-   - Automatic round progression
+   - `finalize-round`: Close round and establish consensus price
 
-4. **Performance Tracking**
-   - Accuracy score calculation
-   - Historical performance metrics
-   - Dynamic stake weight adjustments
+4. **Data Access**
+   - `get-oracle`: Retrieve oracle information
+   - `get-current-price`: Get latest consensus price
+   - `get-round-info`: Get specific round data
 
 ## Setup Instructions
 
@@ -99,42 +84,42 @@ The system consists of three main data structures:
 
 - Stacks blockchain environment (testnet or mainnet)
 - Clarity CLI tools
-- Minimum stake amount in STX
-- Node.js and npm (for testing environment)
+- Minimum 1,000,000 microSTX for staking
+- Node.js (optional, for testing)
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/dors.git
-cd dors
+git clone https://github.com/your-username/compact-oracle.git
+cd compact-oracle
 ```
 
-2. Install dependencies:
+2. Deploy the contract:
 ```bash
-npm install
-```
-
-3. Deploy the contract:
-```bash
-clarinet contract deploy oracle-system
+clarinet contract deploy compact-oracle
 ```
 
 ### Usage
 
-To register as an oracle:
+Register as an oracle:
 ```clarity
-(contract-call? .oracle-system register-oracle)
+(contract-call? .compact-oracle register-oracle)
 ```
 
-To submit price data:
+Submit price data:
 ```clarity
-(contract-call? .oracle-system submit-price-with-weight u1000000)
+(contract-call? .compact-oracle submit-price u1000000)
 ```
 
-To check round status:
+Finalize a round:
 ```clarity
-(contract-call? .oracle-system get-round-status u1)
+(contract-call? .compact-oracle finalize-round)
+```
+
+Get current price:
+```clarity
+(contract-call? .compact-oracle get-current-price)
 ```
 
 ## Testing
@@ -144,71 +129,128 @@ Run the test suite:
 clarinet test
 ```
 
-## Security Considerations
+## Security Features
 
-- Minimum stake requirement prevents spam
-- Time-windowed submissions prevent manipulation
-- Stake-weighted consensus reduces attack vectors
-- Performance tracking identifies malicious actors
-- Economic penalties for bad behavior
+### Core Security Mechanisms
 
-## Development Phases
+- **Stake Requirements**: Economic security through minimum stake
+- **Duplicate Prevention**: One submission per oracle per round
+- **Consensus Threshold**: Minimum oracle participation required
+- **Round Isolation**: Submissions isolated by round ID
 
-### Phase 1 (Completed)
-- Basic oracle registration
-- Simple price submission
-- Administrative controls
+### Limitations
 
-### Phase 2 (Current)
-- Enhanced consensus mechanism
-- Stake-weighted reporting
-- Round-based submissions
-- Performance tracking
-- Economic incentives
+This compact version prioritizes simplicity over advanced features:
+- No multi-source verification
+- Basic consensus algorithm
+- Limited attack vector protection
+- No sophisticated slashing mechanisms
 
-### Future Phases
-1. Multiple data source integration
-2. Advanced verification methods
-3. Cross-chain compatibility
-4. Governance mechanisms
-5. Advanced economic models
+## Performance
+
+### Gas Efficiency
+- Minimal storage operations
+- Optimized data structures
+- Reduced computational complexity
+
+### Metrics
+```clarity
+;; Simple accuracy tracking
+accuracy = (correct-submissions / total-submissions) × 100
+```
+
+## Development Roadmap
+
+### Current Version (v1.0)
+- Basic oracle registration ✅
+- Simple price submission ✅
+- Round-based consensus ✅
+- Essential read functions ✅
+
+### Future Enhancements
+- Enhanced consensus algorithms (median instead of average)
+- Multi-source data integration
+- Advanced verification methods
+- Governance mechanisms
+
+## API Reference
+
+### Public Functions
+
+```clarity
+;; Register as an oracle
+(register-oracle) -> (response bool uint)
+
+;; Submit price for current round
+(submit-price uint) -> (response bool uint)
+
+;; Finalize current round
+(finalize-round) -> (response uint uint)
+```
+
+### Read-Only Functions
+
+```clarity
+;; Get oracle data
+(get-oracle principal) -> (optional oracle-data)
+
+;; Get latest consensus price
+(get-current-price) -> (optional uint)
+
+;; Get round information
+(get-round-info uint) -> (optional round-data)
+```
+
+## Error Codes
+
+- `u1`: Oracle not registered or insufficient stake
+- `u2`: Oracle inactive
+- `u3`: Already submitted for current round
+- `u4`: Round data not found
+- `u5`: Round already closed
+- `u6`: Insufficient oracle participation
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/AmazingFeature`
-3. Commit your changes: `git commit -m 'Add some AmazingFeature'`
-4. Push to the branch: `git push origin feature/AmazingFeature`
-5. Open a Pull Request
+We welcome contributions! Areas of focus:
 
-### Contribution Guidelines
+1. **Consensus Improvements**: Enhance the averaging mechanism
+2. **Security Auditing**: Review and test the contract
+3. **Documentation**: Improve guides and examples
+4. **Testing**: Add comprehensive test coverage
+
+### Development Guidelines
 
 - Follow Clarity best practices
-- Include comprehensive tests
-- Update documentation
-- Follow the existing code style
-- Add inline comments for complex logic
+- Include unit tests for new features
+- Document all functions and error cases
+- Maintain code simplicity and readability
+
+## Migration from Complex Systems
+
+If migrating from a more complex oracle system:
+
+1. **Data Migration**: Export historical price data
+2. **Oracle Re-registration**: Existing oracles need to re-register
+3. **Stake Transfer**: Move existing stakes to new contract
+4. **Integration Updates**: Update consuming contracts
 
 ## License
 
 This project is licensed under the MIT License.
 
-## Acknowledgments
-
-- Stacks Foundation
-- Clarity Lang Documentation
-- Bitcoin Network
-- Blockchain Oracle Community
-
 ## Changelog
 
-### v0.2.0 (Current)
-- Added round-based consensus mechanism
-- Implemented stake-weighted reporting
-- Enhanced performance tracking
-- Added economic incentives
+### v1.0.0 (Current)
+- Initial compact release
+- Basic oracle registration
+- Simple price submission system
+- Round-based consensus mechanism
+- Essential read-only functions
 
-### v0.1.0
-- Initial release
-- Basic oracle functionality
-- Simple price submissions
+## Acknowledgments
+
+- Stacks Foundation for blockchain infrastructure
+- Clarity language development team
+- Oracle research community
+- Contributors and testers
